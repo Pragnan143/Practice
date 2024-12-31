@@ -1,183 +1,290 @@
-import React, { useState, useEffect } from 'react';
-import { io } from 'socket.io-client';
+// import React, { useState, useEffect } from 'react';
+// import io from 'socket.io-client';
+
+// const socket = io('http://localhost:5000');  // Adjust this to your server's address
+
+// const RoomManager = () => {
+//   const [contestId, setContestId] = useState('');  // Store contest ID internally, not displayed
+//   const [teamId, setTeamId] = useState('');
+//   const [teamName, setTeamName] = useState('');
+//   const [teamSize, setTeamSize] = useState(2);
+//   const [username, setUsername] = useState('');
+//   const [messages, setMessages] = useState([]);
+//   const [chatMessage, setChatMessage] = useState('');
+//   const [teamNotifications, setTeamNotifications] = useState([]);
+//   const [contestStarted, setContestStarted] = useState(false);
+
+//   useEffect(() => {
+//     // Listen for notifications of new teams being created
+//     socket.on('newTeamCreated', ({ subroomId, teamName }) => {
+//       setTeamNotifications((prev) => [...prev, `New team "${teamName}" created with ID: ${subroomId}`]);
+//     });
+
+//     // Listen for team member joining notifications
+//     socket.on('teamMemberJoined', ({ subroomId, teamName, username }) => {
+//       setTeamNotifications((prev) => [...prev, `${username} joined team "${teamName}" (ID: ${subroomId})`]);
+//     });
+
+//     // Listen for incoming messages
+//     socket.on('receiveMessage', (msg) => {
+//       setMessages((prev) => [...prev, msg]);
+//     });
+
+//     return () => {
+//       socket.off('newTeamCreated');
+//       socket.off('teamMemberJoined');
+//       socket.off('receiveMessage');
+//     };
+//   }, []);
+
+//   const handleStartContest = () => {
+//     const contestRoomId = 'contest';  // You can dynamically generate this if needed
+//     setContestId(contestRoomId);
+//     setContestStarted(true);
+//     socket.emit('joinContest', contestRoomId);
+//   };
+
+//   const handleCreateTeam = (e) => {
+//     e.preventDefault();
+//     if (teamSize < 1 || teamSize > 4) {
+//       alert('Team size must be between 1 and 4.');
+//       return;
+//     }
+
+//     socket.emit('createTeam', { mainRoom: contestId, teamSize, teamName });
+//     socket.on('teamCreated', ({ subroomId, teamName }) => {
+//       alert(`Team "${teamName}" created with ID: ${subroomId}`);
+//       setTeamId(subroomId);  // Set the current team ID after creating it
+//     });
+//   };
+
+//   const handleJoinTeam = (e) => {
+//     e.preventDefault();
+//     socket.emit('joinTeam', { mainRoom: contestId, subroomId: teamId, username });
+//     socket.on('teamJoined', (message) => {
+//       alert(message);
+//     });
+//   };
+
+//   const handleSendMessage = (e) => {
+//     e.preventDefault();
+//     if (chatMessage.trim() === '') return;
+
+//     socket.emit('sendMessage', { mainRoom: contestId, subroomId: teamId, message: chatMessage });
+//     setChatMessage('');
+//   };
+
+//   return (
+//     <div>
+//       {!contestStarted ? (
+//         <div>
+//           <h1>Welcome to the Contest</h1>
+//           <button onClick={handleStartContest}>Start Contest</button>
+//         </div>
+//       ) : (
+//         <div>
+//           <h2>Create a Team</h2>
+//           <form onSubmit={handleCreateTeam}>
+//             <input
+//               type="text"
+//               value={teamName}
+//               onChange={(e) => setTeamName(e.target.value)}
+//               placeholder="Enter Team Name"
+//               required
+//             />
+//             <input
+//               type="number"
+//               value={teamSize}
+//               onChange={(e) => setTeamSize(Number(e.target.value))}
+//               min="1"
+//               max="4"
+//               placeholder="Enter Team Size (1-4)"
+//               required
+//             />
+//             <button type="submit">Create Team</button>
+//           </form>
+
+//           <h2>Join an Existing Team</h2>
+//           <form onSubmit={handleJoinTeam}>
+//             <input
+//               type="text"
+//               value={teamId}
+//               onChange={(e) => setTeamId(e.target.value)}
+//               placeholder="Enter Team ID"
+//               required
+//             />
+//             <input
+//               type="text"
+//               value={username}
+//               onChange={(e) => setUsername(e.target.value)}
+//               placeholder="Enter Your Name"
+//               required
+//             />
+//             <button type="submit">Join Team</button>
+//           </form>
+
+//           <h2>Team Notifications</h2>
+//           <ul>
+//             {teamNotifications.map((notification, index) => (
+//               <li key={index}>{notification}</li>
+//             ))}
+//           </ul>
+
+//           <h2>Chat Room</h2>
+//           <form onSubmit={handleSendMessage}>
+//             <input
+//               type="text"
+//               value={chatMessage}
+//               onChange={(e) => setChatMessage(e.target.value)}
+//               placeholder="Enter a message"
+//             />
+//             <button type="submit">Send</button>
+//           </form>
+
+//           <div>
+//             <h3>Messages</h3>
+//             <ul>
+//               {messages.map((msg, index) => (
+//                 <li key={index}>{msg.sender}: {msg.message}</li>
+//               ))}
+//             </ul>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default RoomManager;
+
+///Updated
+
+import React, { useState, useEffect } from "react";
+import io from "socket.io-client";
+
+const socket = io("http://localhost:5000"); // Adjust this to your server's address
+
+const generateContestId = () => {
+  return "contest-" + Math.random().toString(36).substr(2, 9); // Generates a unique contest ID
+};
 
 const RoomManager = () => {
-  const [socket, setSocket] = useState(null);
-  const [teamSize, setTeamSize] = useState('');
-  const [teamName, setTeamName] = useState('');
-  const [teamId, setTeamId] = useState('');
-  const [messages, setMessages] = useState([]);
-  const [isContestJoined, setIsContestJoined] = useState(false);
-  const [isTeamJoined, setIsTeamJoined] = useState(false);
-  const [chatMessage, setChatMessage] = useState('');
-  const [teamNotifications, setTeamNotifications] = useState([]);
+  const [contestId, setContestId] = useState("");
+  const [teams, setTeams] = useState([]); // List of teams joining the contest
+  const [teamName, setTeamName] = useState("");
+  const [teamSize, setTeamSize] = useState(2);
+  const [username, setUsername] = useState("");
+  const [isCreator, setIsCreator] = useState(false); // To differentiate between creator and joiner
+  const [contestJoined, setContestJoined] = useState(false);
 
   useEffect(() => {
-    // Initialize Socket.io connection
-    const newSocket = io('http://localhost:5000');
-    setSocket(newSocket);
+    // Listen for new teams joining the contest
+    socket.on("newTeamCreated", ({ subroomId, teamName }) => {
+      setTeams((prevTeams) => [...prevTeams, { teamName, subroomId }]);
+    });
 
-    // Cleanup on component unmount
-    return () => newSocket.close();
+    return () => {
+      socket.off("newTeamCreated");
+    };
   }, []);
 
-  useEffect(() => {
-    if (socket) {
-      // Listen for contest joined events
-      socket.on('roomJoined', (message) => {
-        setMessages((prevMessages) => [...prevMessages, message]);
-        setIsContestJoined(true);
-      });
+  const handleCreateContest = () => {
+    const newContestId = generateContestId(); // Generate a unique contest ID
+    setContestId(newContestId);
+    setIsCreator(true);
+    setContestJoined(true);
 
-      // Listen for team created events
-      socket.on('subroomCreated', ({ subroomId, teamName }) => {
-        setMessages((prevMessages) => [...prevMessages, `Team ${teamName} created with ID: ${subroomId}`]);
-        setTeamId(subroomId);  // Display the team ID
-      });
-
-      // Listen for team creation notifications
-      socket.on('teamCreated', ({ subroomId, teamName }) => {
-        setTeamNotifications((prevNotifications) => [
-          ...prevNotifications,
-          `Team ${teamName} (ID: ${subroomId}) has been created.`,
-        ]);
-      });
-
-      // Listen for team join notifications
-      socket.on('teamMemberJoined', ({ subroomId, teamName }) => {
-        setTeamNotifications((prevNotifications) => [
-          ...prevNotifications,
-          `A new member has joined team ${teamName} (ID: ${subroomId}).`,
-        ]);
-      });
-
-      // Listen for team joined events
-      socket.on('subroomJoined', (message) => {
-        setMessages((prevMessages) => [...prevMessages, message]);
-        setIsTeamJoined(true);
-      });
-
-      // Listen for chat messages
-      socket.on('receiveMessage', ({ sender, message }) => {
-        setMessages((prevMessages) => [...prevMessages, `${sender}: ${message}`]);
-      });
-
-      // Listen for errors
-      socket.on('error', (message) => {
-        setMessages((prevMessages) => [...prevMessages, `Error: ${message}`]);
-      });
-    }
-  }, [socket]);
+    socket.emit("joinContest", newContestId);
+  };
 
   const handleJoinContest = (e) => {
     e.preventDefault();
-    const contestRoom = 'contest';
-    socket.emit('createOrJoinRoom', contestRoom);
+    socket.emit("joinContest", contestId);
+    setContestJoined(true);
   };
 
   const handleCreateTeam = (e) => {
     e.preventDefault();
-    if (teamSize > 4 || teamSize < 1) {
-      alert('Team size must be between 1 and 4.');
-    } else if (!teamName.trim()) {
-      alert('Please enter a valid team name.');
-    } else {
-      socket.emit('createSubroom', { mainRoom: 'contest', teamSize: parseInt(teamSize), teamName });
+    if (teamSize < 1 || teamSize > 4) {
+      alert("Team size must be between 1 and 4.");
+      return;
     }
-  };
 
-  const handleJoinTeam = () => {
-    if (teamId) {
-      socket.emit('joinSubroom', { mainRoom: 'contest', subroomId: teamId });
-    }
-  };
-
-  const handleSendMessage = (e) => {
-    e.preventDefault();
-    if (chatMessage.trim()) {
-      socket.emit('sendMessage', { mainRoom: 'contest', subroomId: teamId, message: chatMessage });
-      setChatMessage(''); // Clear the input field
-    }
+    socket.emit("createTeam", { mainRoom: contestId, teamSize, teamName });
   };
 
   return (
     <div>
-      <h1>Contest Room</h1>
-      {!isContestJoined && (
-        <form onSubmit={handleJoinContest}>
-          <button type="submit">Join Contest Room</button>
-        </form>
-      )}
-
-      {isContestJoined && !isTeamJoined && (
+      {!contestJoined ? (
         <div>
-          <h2>Create a Team</h2>
-          <form onSubmit={handleCreateTeam}>
-  <label>
-    Team Name:
-    <input
-      type="text"
-      value={teamName || ''}  // Ensure teamName is always a string
-      onChange={(e) => setTeamName(e.target.value)}
-      required
-    />
-  </label>
-  <label>
-    Team Size (1-4):
-    <input
-      type="number"
-      value={teamSize || ''}  // Ensure teamSize is always a string (even if it's empty)
-      onChange={(e) => setTeamSize(e.target.value)}
-      required
-    />
-  </label>
-  <button type="submit">Create Team</button>
-</form>
+          <h1>Contest Portal</h1>
+          <button onClick={handleCreateContest}>Create Contest</button>
 
-          <h3>Or join an existing team with ID:</h3>
-          <input
-            type="text"
-            placeholder="Enter team ID"
-            value={teamId || ''}  // Ensure teamId is always a string
-            onChange={(e) => setTeamId(e.target.value)}
-/>
-          <button onClick={handleJoinTeam}>Join Team</button>
-        </div>
-      )}
-
-      {isTeamJoined && (
-        <div>
-          <h2>Team Chat</h2>
-          <form onSubmit={handleSendMessage}>
+          <h2>Or Join an Existing Contest</h2>
+          <form onSubmit={handleJoinContest}>
             <input
               type="text"
-              value={chatMessage}
-              onChange={(e) => setChatMessage(e.target.value)}
-              placeholder="Enter message"
+              value={contestId}
+              onChange={(e) => setContestId(e.target.value)}
+              placeholder="Enter Contest ID"
               required
             />
-            <button type="submit">Send</button>
+            <button type="submit">Join Contest</button>
           </form>
         </div>
+      ) : (
+        <div>
+          <h1>Contest Room: {contestId}</h1>
+
+          {isCreator && (
+            <div>
+              <h2>Teams in this Contest</h2>
+              {teams.length === 0 ? (
+                <p>No teams have joined yet.</p>
+              ) : (
+                <ul>
+                  {teams.map((team, index) => (
+                    <li key={index}>
+                      Team Name: {team.teamName}, Team ID: {team.subroomId}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
+          <h2>Create a Team</h2>
+          <form onSubmit={handleCreateTeam}>
+            <input
+              type="text"
+              value={teamName}
+              onChange={(e) => setTeamName(e.target.value)}
+              placeholder="Enter Team Name"
+              required
+            />
+            <input
+              type="number"
+              value={teamSize}
+              onChange={(e) => setTeamSize(Number(e.target.value))}
+              min="1"
+              max="4"
+              placeholder="Enter Team Size (1-4)"
+              required
+            />
+            <button type="submit">Create Team</button>
+          </form>
+
+          <h2>Join a Team</h2>
+          <input
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="Enter Your Name"
+            required
+          />
+          {/* Handle team joining input and actions here */}
+        </div>
       )}
-
-      <div>
-        <h3>Notifications:</h3>
-        <ul>
-          {teamNotifications.map((notif, idx) => (
-            <li key={idx}>{notif}</li>
-          ))}
-        </ul>
-      </div>
-
-      <div>
-        <h3>Messages:</h3>
-        <ul>
-          {messages.map((msg, idx) => (
-            <li key={idx}>{msg}</li>
-          ))}
-        </ul>
-      </div>
     </div>
   );
 };
