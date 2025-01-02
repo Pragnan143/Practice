@@ -1,0 +1,144 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  width: 100%;
+  height: 60px;
+  background: #000;
+  color: #fff;
+}
+nav {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+}
+.logo {
+  font-size: large;
+  font-weight: bold;
+}
+.right {
+  width: 40%;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+}
+.right > a {
+  padding: 2px;
+  text-decoration: none;
+  color: white;
+}
+.nav_buttons {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  gap: 10px;
+}
+
+.nav_buttons > button {
+  height: 40px;
+  width: 120px;
+  padding: 2px;
+  font-weight: bold;
+}
+
+.hero {
+  height: 70vh;
+  width: 100%;
+  background-color: yellow;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hero > .left {
+  width: 50%;
+  height: 100%;
+}
+
+.hero > .left {
+  display: flex;
+  align-items: start;
+  justify-content: center;
+  flex-direction: column;
+  margin-left: 100px;
+  gap: 20px;
+  width: 50%;
+  height: 100%;
+}
+.hero > .right {
+  height: 100%;
+  width: 50%;
+  border-radius: 50%;
+  overflow: hidden;
+}
+.right > img {
+  height: 450px;
+  width: 450px;
+  border-radius: 50%;
+}
+
+.projects {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px;
+}
+.testimonials {
+  height: 70vh;
+  background-color: blue;
+}
+
+h1 {
+  font-size: xx-large;
+  font-weight: bold;
+}
+h2 {
+  font-size: x-large;
+  font-weight: bold;
+}
+p {
+  font-size: large;
+}
+.left > button {
+  margin-top: 20px;
+  height: 80px;
+  width: 240px;
+  background-color: aliceblue;
+  outline: none;
+  border: none;
+  font-size: x-large;
+}
+.projects_arrangement {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.project_cards {
+  height: 500px;
+  width: 400px;
+  padding: 15px;
+  border: 1px solid yellow;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+}
+
+.project_cards > .card_img {
+  height: 60%;
+  width: 100%;
+}
+
+.card_desc {
+  height: 40%;
+  background-color: rgb(207, 207, 199);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 2px;
+}
